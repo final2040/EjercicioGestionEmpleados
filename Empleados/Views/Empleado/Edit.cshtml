@@ -1,0 +1,57 @@
+﻿@using System.Web.UI.WebControls
+@model Empleados.Models.ViewModels.EditViewModel
+
+@{
+    ViewBag.Title = "Edit";
+}
+
+<h2>Edit</h2>
+
+
+@using (Ajax.BeginForm("Edit", new AjaxOptions()
+{
+    HttpMethod = "POST",
+    OnSuccess = "SuccessMessage",
+    OnFailure = "FailureMessage"
+}))
+{
+    @Html.AntiForgeryToken()
+    @Html.Partial("_EditView", Model)
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+<!-- Modal -->
+@Html.Partial("_messageBox")
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+}
+<script>
+    function SuccessMessage(data) {
+        if (data.ActionResult) {
+            var buttonConfig = {
+                accept: {
+                    text: "Ok",
+                    styleClass: "btn btn-default",
+                    action: function () {
+                        $("#messageBox").modal("hide");
+                        window.setTimeout(function () {
+                            window.location = "..";
+                        }, 500);
+                    }
+                }
+            };
+            ShowDialog("Exito!", data.Message, buttonConfig);
+        } else {
+            ShowDialog("Fallo!", data.Message);
+        }
+    }
+    function FailureMessage(data) {
+        ShowDialog("Fallo!", data.statusText);
+    }
+</script>

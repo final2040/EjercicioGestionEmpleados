@@ -1,0 +1,183 @@
+﻿@model IEnumerable<Model.Empleado>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create", null, new { @class = "btn btn-default" })
+</p>
+<p>
+    <input type="text" id="criteriaTxt" placeholder="Buscar..." class="form-control" />
+</p>
+<table class="table" id="content">
+    <thead id="contentHeader">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Nombres)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Apellidos)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Edad)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DepartamentoId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PuestoId)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="contentBody">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Nombres)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Apellidos)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Edad)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Departamento.Nombre)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Puesto.Nombre)
+                </td>
+                <td>
+                    <a href="@Url.Action("Edit", new {id = item.Id})">
+                        <span class="glyphicon glyphicon-pencil"></span>
+                    </a>
+                    <a href="#" onclick="ConfirmDelete(@item.Id)">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@Html.Partial("_messageBox")
+
+
+<script>
+    $(document).ready(function () {
+        $("#criteriaTxt").keyup(function () {
+            var criteria = $("#criteriaTxt").val();
+            loadResults(criteria);
+        });
+    });
+
+    function successMessage(data) {
+        window.setTimeout(function () {
+            if (data.ActionResult) {
+                ShowDialog("Exito!", data.Message, {
+                    Accept: {
+                        text: "Aceptar",
+                        styleClass: "btn btn-default",
+                        action: function () {
+                            $("#messageBox").modal("hide");
+                            location.reload();
+                        }
+                    }
+                });
+            } else {
+                ShowDialog("Fallo!", data.Message,
+                {
+                    Accept: {
+                        text: "Aceptar",
+                        styleClass: "btn btn-default",
+                        action: function () {
+                            $("#messageBox").modal("hide");
+                        }
+                    }
+                });
+            }
+        }, 500);
+    }
+
+    function failureMessage(data) {
+        window.setTimeout(function () {
+            ShowDialog("Fallo!", data.statusText,
+            {
+                Accept: {
+                    text: "Aceptar",
+                    styleClass: "btn btn-default",
+                    action: function () {
+                        $("#messageBox").modal("hide");
+                    }
+                }
+            });
+        }, 500);
+    }
+
+    function ConfirmDelete(idEmpleado) {
+        var optionButtons = {
+            Accept: {
+                text: "Aceptar",
+                styleClass: "btn btn-danger",
+                action: function () {
+                    $("#messageBox").modal("hide");
+                    $.ajax({
+                        type: "POST",
+                        url: "Delete",
+                        data: JSON.stringify({ id: idEmpleado }),
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: successMessage,
+                        error: failureMessage
+                    });
+
+                }
+            },
+            Cancel: {
+                text: "Cancelar",
+                styleClass: "btn btn-default",
+                action: function () { $("#messageBox").modal("hide"); }
+            }
+        };
+        ShowDialog("Atención!", "Está a punto de eliminar un empleado " +
+            "esta acción no se puede deshacer ¿Desea continuar?", optionButtons);
+    }
+
+
+
+    function loadResults(criteria) {
+        var result;
+        var ajaxConfig = {
+            type: "POST",
+            url: "Index",
+            data: JSON.stringify({ "criteria": criteria }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data){ createTable(data)},
+            error: failureMessage
+        }
+        $.ajax(ajaxConfig);
+    }
+
+    function createTable(data) {
+        $("#contentBody").empty();
+        $(data).each(function (index, value) {
+            var row = $("<tr>" +
+                "<td>" + value.Nombres + "</td>" +
+                "<td>" + value.Apellidos + "</td>" +
+                "<td>" + value.Edad + "</td>" +
+                "<td>" + value.Departamento.Nombre + "</td>" +
+                "<td>" + value.Puesto.Nombre + "</td>"+
+                "<td><a href='/Empleado/Edit/"+value.Id+"'>" +
+                "<span class='glyphicon glyphicon-pencil'></span></a>" +
+                "<a href='#' onclick='ConfirmDelete(" + value.Id + ")'>" +
+                "<span class='glyphicon glyphicon-trash'></span></a>" +
+                "</td>");
+            $("#contentBody").append(row);
+        });
+    }
+</script>
